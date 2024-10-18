@@ -1,170 +1,199 @@
 import cairo
 import math
 
-# Create the final image surface
-width, height = 700, 700
-surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+# Create an image surface with ARGB32 format
+surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 600, 400)
 ctx = cairo.Context(surface)
-
-# Set background color (white)
-ctx.set_source_rgb(1, 1, 1)
+ctx.set_source_rgb(1, 1, 1)  # Set background color to light gray
 ctx.paint()
 
-# Main building (middle church)
-ctx.set_source_rgb(0, 0, 0)
-ctx.rectangle(100, 200, 200, 140)  # Adjusted position
-ctx.fill()
+ctx.set_line_width(2)
 
-# Roof
-ctx.move_to(100, 200)
-ctx.line_to(145, 150)
-ctx.line_to(250, 150)
-ctx.line_to(300, 200)
-ctx.fill()
-
-# Draw the outer shape
-ctx.move_to(80, 215)
-ctx.line_to(143, 145)
-ctx.line_to(250, 145)
-ctx.line_to(320, 215)
-ctx.stroke()
-
-# Draw the inner shape
-ctx.move_to(75, 205)
-ctx.line_to(141, 135)
-ctx.line_to(254, 135)
-ctx.line_to(321, 205)
-ctx.stroke()
-
-# Fill the space between the two shapes
-ctx.move_to(80, 215)
-ctx.line_to(143, 145)
-ctx.line_to(250, 145)
-ctx.line_to(320, 215)
-ctx.line_to(321, 205)
-ctx.line_to(254, 135)
-ctx.line_to(141, 135)
-ctx.line_to(75, 205)
-ctx.close_path()
+# Draw the bottom part of the cross
+ctx.move_to(180, 90)
+ctx.line_to(210, 90)
+ctx.line_to(200, 50)
+ctx.line_to(190, 50)
 ctx.set_source_rgb(0, 0, 0)  # Set color to black
 ctx.fill()
 
-# Redraw the outer shape to make it visible over the fill
-ctx.move_to(80, 215)
-ctx.line_to(143, 145)
-ctx.line_to(250, 145)
-ctx.line_to(320, 215)
-ctx.stroke()
-
-# Redraw the inner shape to make it visible over the fill
-ctx.move_to(75, 205)
-ctx.line_to(141, 135)
-ctx.line_to(254, 135)
-ctx.line_to(321, 205)
-ctx.stroke()
-
-# Circular window
-ctx.arc(200, 175, 15, 0, 2 * math.pi)
-ctx.set_source_rgb(1, 1, 1)
+# Join the two parts of the cross
+ctx.move_to(190, 50)
+ctx.line_to(200, 50)
+ctx.line_to(195, 40)
+ctx.line_to(190, 50)
+ctx.set_source_rgb(0, 0, 0)
 ctx.fill()
 
-# the white roof
-ctx.move_to(145, 260)
-ctx.line_to(200, 200)
-ctx.line_to(255, 260)
-ctx.set_source_rgb(1, 1, 1)
-ctx.stroke()
-
-ctx.move_to(150, 265)
-ctx.line_to(200, 210)
-ctx.line_to(250, 265)
-ctx.move_to(145, 260)
-ctx.line_to(150, 265)
-ctx.move_to(255, 260)
-ctx.line_to(250, 265)
-ctx.set_source_rgb(1, 1, 1)
-ctx.stroke()
-
-# Door
-ctx.arc(200, 235, 25, 3.14, 2 * 3.14)  # Semi-circle for the top
-ctx.fill()
-ctx.rectangle(175, 235, 50, 80)  # Rectangle for the bottom part of the door
-ctx.fill()
-
-ctx.move_to(200, 210)
-ctx.line_to(200, 315)
-ctx.set_line_width(5)
+# Draw the cross
+ctx.move_to(195, 50)
+ctx.line_to(195, 15)
+ctx.move_to(185, 25)
+ctx.line_to(205, 25)
 ctx.set_source_rgb(0, 0, 0)
 ctx.stroke()
 
-# Right side house
-ctx.set_source_rgb(0, 0, 0)  # Black color for house body
-ctx.rectangle(350, 200, 150, 150)  # Adjusted position
-ctx.fill()
-
-# Drawing the roof for the right house
-ctx.move_to(350, 200)
-ctx.line_to(500, 200)
-ctx.line_to(450, 120)
-ctx.line_to(350, 120)
-ctx.close_path()
-ctx.fill()
-
-# Drawing windows for the right house
-ctx.set_source_rgb(1, 1, 1)  # White color for windows
-ctx.rectangle(390, 240, 50, 40)  # Left window
-ctx.fill()
-ctx.rectangle(450, 240, 50, 40)  # Right window
-ctx.fill()
-
-# Left side house
-ctx.set_source_rgb(0, 0, 0)  # Black color for house body
-ctx.rectangle(0, 200, 150, 150)  # Adjusted position
-ctx.fill()
-
-# Drawing the roof for the left house
-ctx.move_to(0, 200)
-ctx.line_to(150, 200)
-ctx.line_to(100, 120)
-ctx.line_to(0, 120)
-ctx.close_path()
-ctx.fill()
-
-# Drawing windows for the left house
-ctx.set_source_rgb(1, 1, 1)  # White color for windows
-ctx.rectangle(30, 240, 50, 40)  # Left window
-ctx.fill()
-ctx.rectangle(80, 240, 50, 40)  # Right window
-ctx.fill()
-
-# Top building with arched window
-ctx.set_source_rgb(0, 0, 0)  # Black color for rectangle
-ctx.move_to(50, 40)  # Adjusted position for line
-ctx.line_to(230, 40)
-ctx.set_line_width(20)
+# Draw the bar below the cross
+ctx.rectangle(160, 91, 70, 9)
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
 ctx.stroke()
 
-# Draw the black rectangle
-ctx.rectangle(70, 60, 170, 80)  # Adjusted height for better proportion
-ctx.fill()
-
-# Set white color for the arched window
+# Draw the side structures of the chapel
+ctx.rectangle(50, 220, 80, 40)  # Left side rectangle
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
 ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
+ctx.rectangle(260, 220, 80, 40)  # Right side rectangle
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
 
-# Draw the arched window (semi-circle + rectangle)
-ctx.arc(155, 100, 30, 3.14, 2 * 3.14)  # Adjusted position for arch
+# Draw small white rectangles for windows on the sides
+ctx.rectangle(60, 230, 20, 15)
+ctx.set_source_rgb(1, 1, 1)
 ctx.fill()
-ctx.rectangle(125, 100, 60, 40)  # Rectangle for the bottom part of the window
+ctx.rectangle(90, 230, 20, 15)
+ctx.set_source_rgb(1, 1, 1)
+ctx.fill()
+ctx.rectangle(280, 230, 20, 15)
+ctx.set_source_rgb(1, 1, 1)
+ctx.fill()
+ctx.rectangle(310, 230, 20, 15)
+ctx.set_source_rgb(1, 1, 1)
 ctx.fill()
 
-# Cross on top of the arched window
-ctx.set_source_rgb(0, 0, 0)  # Black for cross
-ctx.rectangle(150, 80, 10, 40)  # Vertical part
-ctx.fill()
-ctx.rectangle(130, 90, 60, 10)  # Horizontal part
+# Draw trapezoidal shapes on the sides
+ctx.move_to(80, 190)
+ctx.line_to(130, 190)
+ctx.line_to(130, 220)
+ctx.line_to(40, 220)
+ctx.close_path()
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
+
+ctx.move_to(260, 190)
+ctx.line_to(310, 190)
+ctx.line_to(350, 220)
+ctx.line_to(260, 220)
+ctx.close_path()
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
+
+# Draw the central block of the chapel
+ctx.move_to(130, 170)
+ctx.line_to(130, 270)
+ctx.line_to(260, 270)
+ctx.line_to(260, 170)
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
+
+# Draw windows in the center block
+ctx.rectangle(160, 220, 34, 47)
+ctx.rectangle(196, 220, 34, 47)
 ctx.fill()
 
-# Save the final image
-surface.write_to_png("chapel.png")
+ctx.move_to(160, 220)
+ctx.curve_to(170, 210, 180, 210, 194, 210)
+ctx.line_to(194, 220)
+ctx.close_path()
+ctx.fill()
 
-print("Final image saved as 'chapel.png'")
+ctx.move_to(196, 210)
+ctx.curve_to(210, 210, 220, 210, 229, 220)
+ctx.line_to(196, 220)
+ctx.close_path()
+ctx.fill()
+
+# Draw the structure of the center block
+ctx.move_to(130, 170)
+ctx.line_to(130, 270)
+ctx.line_to(260, 270)
+ctx.line_to(260, 170)
+ctx.line_to(240, 160)
+ctx.line_to(150, 160)
+ctx.close_path()
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
+
+# Draw the center roof structure
+ctx.move_to(120, 180)
+ctx.line_to(150, 160)
+ctx.line_to(240, 160)
+ctx.line_to(270, 180)
+ctx.line_to(270, 170)
+ctx.line_to(240, 150)
+ctx.line_to(150, 150)
+ctx.line_to(120, 170)
+ctx.close_path()
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
+
+# Draw a circular window in the center block
+ctx.arc(195, 175, 10, math.radians(0), math.radians(360))
+ctx.set_source_rgb(1, 1, 1)
+ctx.fill()
+
+# Draw the roof above the door
+ctx.move_to(150, 220)
+ctx.line_to(195, 200)
+ctx.line_to(240, 220)
+ctx.line_to(240, 210)
+ctx.line_to(195, 190)
+ctx.line_to(150, 210)
+ctx.close_path()
+ctx.set_source_rgb(0, 0, 0)
+ctx.fill_preserve()
+ctx.set_source_rgb(1, 1, 1)
+ctx.stroke()
+
+# Draw the doors
+ctx.rectangle(160, 220, 34, 47)
+ctx.rectangle(196, 220, 34, 47)
+ctx.fill()
+
+ctx.move_to(160, 220)
+ctx.curve_to(170, 210, 180, 210, 194, 210)
+ctx.line_to(194, 220)
+ctx.close_path()
+ctx.fill()
+
+ctx.move_to(196, 210)
+ctx.curve_to(210, 210, 220, 210, 229, 220)
+ctx.line_to(196, 220)
+ctx.close_path()
+ctx.fill()
+
+# Draw the top part of the chapel
+ctx.rectangle(170, 100, 50, 50)
+ctx.set_source_rgb(0, 0, 0)
+ctx.set_line_width(1)
+ctx.fill_preserve()
+ctx.stroke()
+
+# Draw the arched top of the chapel
+ctx.move_to(180, 120)
+ctx.line_to(180, 147)
+ctx.line_to(210, 147)
+ctx.line_to(210, 120)
+ctx.arc(195, 120, 15, math.pi, 0)
+ctx.set_source_rgb(1, 1, 1)
+ctx.set_line_width(1)
+ctx.fill_preserve()
+ctx.stroke()
+
+
+surface.write_to_png('Chapel2.png')

@@ -352,5 +352,7 @@ while running:
     # Control the frame rate
     clock.tick(10)
 
+    
+
 # Quit pygame
 pygame.quit()

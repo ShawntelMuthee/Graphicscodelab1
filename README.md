@@ -13,8 +13,8 @@ Victory: The player collects all treasures.
 
 **Game Controls**
 Arrow Keys: Move the player around the maze.
-R: Restart the game after a game over or victory.
-Q: Quit the game.
+R: Restarts the game after a game over or victory.
+Q: Quits the game.
 
 **Requirements**
 Python 3.x

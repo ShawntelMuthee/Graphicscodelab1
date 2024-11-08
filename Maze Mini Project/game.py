@@ -1,22 +1,29 @@
 import pygame
 import random
+import math
+import time
 
 # Initialize pygame
 pygame.init()
 
 # Screen dimensions
-SCREEN_WIDTH = 700
-SCREEN_HEIGHT = 700
-MOVE_DISTANCE = 24
+screen_width = 700
+screen_height = 700
+
+# Create screen
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Maze Game")
 
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
 GOLD = (255, 215, 0)
+ORANGE = (255, 165, 0)
 
-# Create screen
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Maze Game")
+# Clock to control the frame rate
+clock = pygame.time.Clock()
 
 # Load images
 wizard_image = pygame.image.load("resized_wizard.gif")
@@ -25,18 +32,14 @@ wall_image = pygame.image.load("resized_wall.gif")
 enemy_r_image = pygame.image.load("resized_enemy_r.gif")
 enemy_l_image = pygame.image.load("resized_enemy_l.gif")
 
-# Resize images to 24x24
+# Resize images to match the 24x24 size
 wizard_image = pygame.transform.scale(wizard_image, (24, 24))
 treasure_image = pygame.transform.scale(treasure_image, (24, 24))
 wall_image = pygame.transform.scale(wall_image, (24, 24))
 enemy_r_image = pygame.transform.scale(enemy_r_image, (24, 24))
 enemy_l_image = pygame.transform.scale(enemy_l_image, (24, 24))
 
-# Clock and font
-clock = pygame.time.Clock()
-font = pygame.font.Font(None, 36)
-
-# Maze layout levels
+# Setup maze
 levels = [
     "",
     [
@@ -68,13 +71,17 @@ levels = [
     ]
 ]
 
-# Game states
-PLAYING = 0
-GAME_OVER = 1
-VICTORY = 2
+
+class PowerUp(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.Surface([24, 24], pygame.SRCALPHA)
+        pygame.draw.circle(self.image, ORANGE, (12, 12), 10)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 
-# Classes
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -83,34 +90,54 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = 100
         self.rect.y = 100
         self.gold = 0
-        self.lives = 3
+        self.lives = 5
+        self.start_x = 100
+        self.start_y = 100
         self.invulnerable = False
         self.invulnerable_timer = 0
+        self.power_up_active = False
+        self.power_up_end_time = 0
 
     def update(self, keys, walls):
-        if self.invulnerable:
+        # Update power-up status
+        if self.power_up_active and time.time() > self.power_up_end_time:
+            self.power_up_active = False
+            self.invulnerable = False
+
+        if self.invulnerable and not self.power_up_active:
             self.invulnerable_timer -= 1
             if self.invulnerable_timer <= 0:
                 self.invulnerable = False
 
+        # Get the player's new position based on key presses
         original_position = self.rect.copy()
 
-        # Move based on key input
         if keys[pygame.K_LEFT]:
-            self.rect.x -= MOVE_DISTANCE
-        elif keys[pygame.K_RIGHT]:
-            self.rect.x += MOVE_DISTANCE
-        elif keys[pygame.K_UP]:
-            self.rect.y -= MOVE_DISTANCE
-        elif keys[pygame.K_DOWN]:
-            self.rect.y += MOVE_DISTANCE
+            self.rect.x -= 24
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += 24
+        if keys[pygame.K_UP]:
+            self.rect.y -= 24
+        if keys[pygame.K_DOWN]:
+            self.rect.y += 24
 
-        # Check wall collision and bounce back if collision occurs
-        if pygame.sprite.spritecollideany(self, walls):
+        # Check for collision with walls and revert position if needed
+        if pygame.sprite.spritecollide(self, walls, False):
             self.rect = original_position
 
+    def activate_power_up(self):
+        self.power_up_active = True
+        self.invulnerable = True
+        self.power_up_end_time = time.time() + 10  # 10 seconds duration
+
+    def reset_position(self):
+        self.rect.x = self.start_x
+        self.rect.y = self.start_y
+        self.power_up_active = False
+        self.invulnerable = False
+
     def hit_by_enemy(self):
-        if not self.invulnerable:
+        if not self.invulnerable and not self.power_up_active:
             self.lives -= 1
             self.invulnerable = True
             self.invulnerable_timer = 20
@@ -122,220 +149,208 @@ class Treasure(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = treasure_image
-        self.rect = self.image.get_rect(topleft=(x, y))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y, direction):
         super().__init__()
         self.image = enemy_l_image if direction == 'left' else enemy_r_image
-        self.rect = self.image.get_rect(topleft=(x, y))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
         self.direction = direction
-        self.change_direction_timer = 30
 
     def update(self, walls):
-        if self.change_direction_timer <= 0:
-            # Randomize direction
-            self.direction = random.choice(['up', 'down', 'left', 'right'])
-            self.change_direction_timer = 30
-
         original_position = self.rect.copy()
 
-        # Movement based on direction
         if self.direction == 'up':
-            self.rect.y -= MOVE_DISTANCE
+            self.rect.y -= 24
         elif self.direction == 'down':
-            self.rect.y += MOVE_DISTANCE
+            self.rect.y += 24
         elif self.direction == 'left':
-            self.rect.x -= MOVE_DISTANCE
+            self.rect.x -= 24
             self.image = enemy_l_image
         elif self.direction == 'right':
-            self.rect.x += MOVE_DISTANCE
+            self.rect.x += 24
             self.image = enemy_r_image
 
-        # Bounce back and randomize direction on wall collision
-        if pygame.sprite.spritecollideany(self, walls):
+        if pygame.sprite.spritecollide(self, walls, False):
             self.rect = original_position
             self.direction = random.choice(['up', 'down', 'left', 'right'])
 
-        self.change_direction_timer -= 1
+
+def find_empty_spaces(level):
+    empty_spaces = []
+    for y, row in enumerate(level):
+        for x, char in enumerate(row):
+            if char == ' ':  # Only consider empty spaces
+                empty_spaces.append((x * 24, y * 24))
+    return empty_spaces
 
 
-class Wall(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = wall_image
-        self.rect = self.image.get_rect(topleft=(x, y))
+def spawn_power_up(walls, empty_spaces):
+    if not empty_spaces:
+        return None
+
+    # Choose a random empty space
+    x, y = random.choice(empty_spaces)
+    return PowerUp(x, y)
 
 
-class PowerUp(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((24, 24), pygame.SRCALPHA)  # Transparent surface
-        pygame.draw.circle(self.image, GOLD, (12, 12), 12)  # Draw a circle to create the sphere effect
-        self.rect = self.image.get_rect(center=(x, y))  # Position it in the maze
-        self.respawn_timer = 180 # Timer for respawn delay
-        self.active = True  # Power-up is initially active
-
-    def spawn(self, walls, maze):
-        """Ensure the power-up doesn't spawn on walls and is within the valid maze area."""
-        valid_positions = []
-        for y, row in enumerate(maze):
-            for x, char in enumerate(row):
-                if char == ' ' and not self.collides_with_wall(x * MOVE_DISTANCE, y * MOVE_DISTANCE, walls):
-                    valid_positions.append((x * MOVE_DISTANCE, y * MOVE_DISTANCE))
-
-        if valid_positions:
-            self.rect.x, self.rect.y = random.choice(valid_positions)
-
-    def collides_with_wall(self, x, y, walls):
-        """Check if a given (x, y) position collides with a wall."""
-        temp_rect = pygame.Rect(x, y, MOVE_DISTANCE, MOVE_DISTANCE)
-        return any(temp_rect.colliderect(wall.rect) for wall in walls)
-
-    def update(self, walls, maze):
-        """Update the respawn timer and deactivate when time is up."""
-        if not self.active:
-            self.respawn_timer -= 1
-            if self.respawn_timer <= 0:
-                self.active = True  # Reactivate the power-up after timer expires
-                self.spawn(walls, maze)  # Spawn at a new valid position
-
-    def trigger_respawn(self, walls, maze):
-        """Trigger the respawn mechanism after a fixed period of time."""
-        if self.active:
-            self.active = False  # Deactivate the power-up
-            self.respawn_timer = 300  # Set to 300 frames for 5 seconds (approximately)
-            self.spawn(walls, maze)  # Spawn at a new location when triggered
-
-# Setup functions and main game loop
-def setup_maze(level, player):
+def setup_maze(level):
     walls = pygame.sprite.Group()
     treasures = pygame.sprite.Group()
     enemies = pygame.sprite.Group()
-    powerups = pygame.sprite.Group()  # To store power-ups
+    power_ups = pygame.sprite.Group()
+    empty_spaces = []
 
     for y, row in enumerate(level):
         for x, char in enumerate(row):
-            screen_x = x * MOVE_DISTANCE
-            screen_y = y * MOVE_DISTANCE
+            screen_x = x * 24
+            screen_y = y * 24
+
             if char == 'X':
-                wall = Wall(screen_x, screen_y)
+                wall = pygame.sprite.Sprite()
+                wall.image = wall_image
+                wall.rect = wall.image.get_rect()
+                wall.rect.x = screen_x
+                wall.rect.y = screen_y
                 walls.add(wall)
             elif char == 'P':
                 player.rect.x = screen_x
                 player.rect.y = screen_y
+                player.start_x = screen_x
+                player.start_y = screen_y
             elif char == 'T':
                 treasure = Treasure(screen_x, screen_y)
                 treasures.add(treasure)
             elif char == 'E':
                 enemy = Enemy(screen_x, screen_y, random.choice(['up', 'down', 'left', 'right']))
                 enemies.add(enemy)
+            elif char == ' ':
+                empty_spaces.append((screen_x, screen_y))
 
-    # Add power-ups to random locations
-    for _ in range(3):  # You can adjust the number of power-ups
-        power_up = PowerUp(random.randint(0, (SCREEN_WIDTH // MOVE_DISTANCE) - 1) * MOVE_DISTANCE,
-                           random.randint(0, (SCREEN_HEIGHT // MOVE_DISTANCE) - 1) * MOVE_DISTANCE)
-        power_up.spawn(walls, level)  # Pass the maze layout to the spawn method
-        powerups.add(power_up)
+    # Add initial power-up in a valid empty space
+    if empty_spaces:
+        power_ups.add(spawn_power_up(walls, empty_spaces))
 
-    return walls, treasures, enemies, powerups
-
+    return walls, treasures, enemies, power_ups, empty_spaces
 
 
-def display_score(player):
-    score_text = font.render(f"Treasures: {player.gold}  Lives: {player.lives}", True, GOLD)
-    screen.blit(score_text, (10, 10))
+def reset_game():
+    player.lives = 5
+    player.reset_position()
+    return setup_maze(levels[1])
 
 
-def display_game_over():
-    game_over_text = font.render("GAME OVER", True, WHITE)
-    screen.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, SCREEN_HEIGHT // 2))
+# Initialize player and maze
+player = Player()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
 
+# Setup maze level
+walls, treasures, enemies, power_ups, empty_spaces = setup_maze(levels[1])
+all_sprites.add(walls, treasures, enemies, power_ups)
 
-def display_victory():
-    victory_text = font.render("VICTORY! YOU WIN!", True, GOLD)
-    screen.blit(victory_text, (SCREEN_WIDTH // 2 - victory_text.get_width() // 2, SCREEN_HEIGHT // 2))
+# Font setup
+font = pygame.font.Font(None, 74)
+power_up_spawn_timer = time.time() + 15  # Spawn first power-up after 15 seconds
 
+# Game states
+PLAYING = 0
+GAME_OVER = 1
+VICTORY = 2
+game_state = PLAYING
 
-def reset_game(player):
-    player.lives = 3
-    player.gold = 0
-    return setup_maze(levels[1], player)
-
-
-def main():
-    player = Player()
-    all_sprites = pygame.sprite.Group(player)
-
-    walls, treasures, enemies, powerups = setup_maze(levels[1], player)
-    all_sprites.add(walls, treasures, enemies, powerups)
-
-    game_state = PLAYING
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+# Game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r and (game_state == GAME_OVER or game_state == VICTORY):
+                walls, treasures, enemies, power_ups, empty_spaces = reset_game()
+                all_sprites = pygame.sprite.Group()
+                all_sprites.add(player, walls, treasures, enemies, power_ups)
+                game_state = PLAYING
+            elif event.key == pygame.K_q and (game_state == GAME_OVER or game_state == VICTORY):
                 running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r and game_state in (GAME_OVER, VICTORY):
-                    walls, treasures, enemies, powerups = reset_game(player)
-                    all_sprites = pygame.sprite.Group(player, walls, treasures, enemies, powerups)
-                    game_state = PLAYING
-                elif event.key == pygame.K_q and game_state in (GAME_OVER, VICTORY):
-                    running = False
 
+    if game_state == PLAYING:
+        # Handle player movement
         keys = pygame.key.get_pressed()
+        player.update(keys, walls)
 
-        if game_state == PLAYING:
-            player.update(keys, walls)
-            enemies.update(walls)
+        # Check for power-up collection
+        power_up_hits = pygame.sprite.spritecollide(player, power_ups, True)
+        if power_up_hits:
+            player.activate_power_up()
 
-            # Check for collisions with treasures
-            if pygame.sprite.spritecollide(player, treasures, True):
-                player.gold += 1
-                if not treasures:  # Check for victory if no treasures are left
-                    game_state = VICTORY
+        # Spawn new power-up periodically
+        if time.time() > power_up_spawn_timer and len(power_ups) < 1:
+            new_power_up = spawn_power_up(walls, empty_spaces)
+            if new_power_up:
+                power_ups.add(new_power_up)
+                all_sprites.add(new_power_up)
+            power_up_spawn_timer = time.time() + 15
 
-            # Check for collisions with power-ups and increase lives
-            if pygame.sprite.spritecollide(player, powerups, True):
-                player.lives += 1  # Restore a life when collecting a power-up
+        # Check for victory
+        if pygame.sprite.spritecollide(player, treasures, True):
+            game_state = VICTORY
 
-            # Check for collisions with enemies
-            if pygame.sprite.spritecollideany(player, enemies):
-                if player.hit_by_enemy():
-                    if player.lives <= 0:
-                        game_state = GAME_OVER
+        # Check for collisions with enemies
+        if pygame.sprite.spritecollide(player, enemies, False):
+            if player.hit_by_enemy():
+                print(f"Player hit! Lives remaining: {player.lives}")
+                if player.lives <= 0:
+                    game_state = GAME_OVER
 
-        # Update power-ups and handle respawn logic
-        for power_up in powerups:
-            power_up.update(walls, levels[1])  # Pass walls and maze to update method
+        # Update all enemies
+        for enemy in enemies:
+            enemy.update(walls)
 
-        # Trigger respawn for power-ups periodically
-        for power_up in powerups:
-            power_up.trigger_respawn(walls, levels[1])  # Pass walls and maze to respawn
+    # Clear the screen
+    screen.fill(BLACK)  # Using black background
 
-        # Draw everything
-        screen.fill(BLACK)
-        all_sprites.draw(screen)
-        display_score(player)
+    # Draw all sprites
+    all_sprites.draw(screen)
 
-        # Display game state message if game is over or won
-        if game_state == GAME_OVER:
-            display_game_over()
-            restart_text = font.render("Press R to Restart or Q to Quit", True, WHITE)
-            screen.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 50))
-        elif game_state == VICTORY:
-            display_victory()
-            restart_text = font.render("Press R to Restart or Q to Quit", True, WHITE)
-            screen.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, SCREEN_HEIGHT // 2 + 50))
+    # Display lives
+    lives_text = font.render(f"Lives: {player.lives}", True, WHITE)
+    screen.blit(lives_text, (10, 10))
 
-        pygame.display.flip()
-        clock.tick(10)  # Set to 10 FPS for demonstration
+    # Display power-up status
+    if player.power_up_active:
+        time_left = int(player.power_up_end_time - time.time())
+        power_up_text = font.render(f"Power-up: {time_left}s", True, ORANGE)
+        screen.blit(power_up_text, (10, 60))
 
-    pygame.quit()
+    # Handle game states
+    if game_state == GAME_OVER:
+        game_over_text = font.render("GAME OVER", True, RED)
+        restart_text = font.render("Press R to Restart or Q to Quit", True, WHITE)
+        text_rect = game_over_text.get_rect(center=(screen_width / 2, screen_height / 2))
+        restart_rect = restart_text.get_rect(center=(screen_width / 2, screen_height / 2 + 60))
+        screen.blit(game_over_text, text_rect)
+        screen.blit(restart_text, restart_rect)
 
+    elif game_state == VICTORY:
+        victory_text = font.render("PLAYER WINS!", True, GOLD)
+        restart_text = font.render("Press R to Restart or Q to Quit", True, WHITE)
+        text_rect = victory_text.get_rect(center=(screen_width / 2, screen_height / 2))
+        restart_rect = restart_text.get_rect(center=(screen_width / 2, screen_height / 2 + 60))
+        screen.blit(victory_text, text_rect)
+        screen.blit(restart_text, restart_rect)
 
+    # Update the screen
+    pygame.display.update()
 
-if __name__ == "__main__":
-    main()
+    # Control the frame rate
+    clock.tick(10)
+
+# Quit pygame
+pygame.quit()

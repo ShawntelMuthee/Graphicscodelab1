@@ -44,6 +44,9 @@ reset_game(player): Resets the game state, lives, and score.
 
 **Game Classes**:
 Player: Represents the player character. Handles movement and interaction with treasures, enemies, and power-ups.
+
+**Pacman Link**
+https://www.echalk.co.uk/amusements/Games/Pacman/pacman.html
 Treasure: Represents a treasure that the player can collect to gain points.
 Enemy: Represents an enemy that randomly moves and can reduce the player's lives upon collision.
 Wall: Represents a wall that the player and enemies cannot pass through.
